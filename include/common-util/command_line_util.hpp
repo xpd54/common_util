@@ -13,6 +13,7 @@
  * ./a.out --message="hello world"
  * returns:- {"message" , "hello world"}
  */
+namespace common_util {
 
 inline std::unordered_map<std::string, std::string> get_command_line_argument(
     int argc, char *argv[]) {
@@ -42,3 +43,5 @@ inline std::unordered_map<std::string, std::string> get_command_line_argument(
   });
   return argument_table;
 }
+
+}  // namespace common_util
