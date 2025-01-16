@@ -15,8 +15,7 @@
  */
 namespace common_util {
 
-inline std::unordered_map<std::string, std::string> get_command_line_argument(
-    int argc, char *argv[]) {
+inline std::unordered_map<std::string, std::string> get_command_line_argument(int argc, char *argv[]) {
   std::vector<std::string> cmd_arguments;
   for (int i = 0; i < argc; ++i) {
     cmd_arguments.push_back(argv[i]);
@@ -38,10 +37,9 @@ inline std::unordered_map<std::string, std::string> get_command_line_argument(
   }
 
   // Log all command line input
-  std::for_each(argument_table.begin(), argument_table.end(), [](auto &value) {
-    std::cout << value.first << "=" << value.second << '\n';
-  });
+  std::for_each(argument_table.begin(), argument_table.end(),
+                [](auto &value) { std::cout << value.first << "=" << value.second << '\n'; });
   return argument_table;
 }
 
-}  // namespace common_util
+} // namespace common_util
