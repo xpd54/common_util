@@ -1,6 +1,5 @@
 #pragma once
 #include <_time.h>
-
 #include <chrono>
 #include <ctime>
 #include <functional>
@@ -14,6 +13,13 @@
 namespace common_util {
 
 class Logger final {
+public:
+  Logger() {}
+
+  // copy constructor
+  Logger(const Logger &) = delete;
+  // copy assignment
+  Logger &operator=(const Logger &) = delete;
   enum class Severity {
     DEBUG,
     INFO,
