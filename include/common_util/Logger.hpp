@@ -36,7 +36,7 @@ public:
   using type_timestamp_callback = std::function<std::string(void)>;
   using type_thread_id_callback = std::function<std::string(void)>;
 
-public:
+private:
   Logger() {
     set_timestamp_callback(Logger::get_timestamp);
     set_thread_id_callback(Logger::get_this_thread_id);
@@ -46,6 +46,7 @@ public:
   Logger(const Logger &) = delete;
   Logger &operator=(const Logger &) = delete;
 
+public:
   // will have singleton instance
   static Logger &get_instance() {
     static Logger self;
