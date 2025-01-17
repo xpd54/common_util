@@ -120,33 +120,6 @@ private:
 
   std::string place_in_bracket(std::string value) { return "[" + value + "]"; }
 
-  void log(const std::string &log_string, Severity serverity) {
-    if (!_log_file_open && _log_output_mode >= OutputMode::FILE) {
-      std::cerr << "-------Log file not open---------";
-      return;
-    }
-
-    if (serverity < _log_severity) {
-      return;
-    }
-
-    std::string log = place_in_bracket(_timestamp_callback()) + " " + place_in_bracket(_thread_id_callback()) + " " +
-                      place_in_bracket(get_severity_string(serverity)) + " " + log_string;
-    std::lock_guard<std::mutex> lock(_logfile_mutex);
-    if (_log_output_mode > OutputMode::FILE) {
-      // flush the streem after each log;
-      _log_file_stream << log << std::endl;
-    }
-
-    if (_log_output_mode == OutputMode::CONSOLE || _log_output_mode == OutputMode::UBIQUITOUS) {
-      if (serverity == Severity::ERROR || serverity == Severity::WARNING) {
-        std::cerr << log << std::endl;
-      } else {
-        std::cout << log << std::endl;
-      }
-    }
-  }
-
 public:
   void init(const std::string &log_file_name = Logger::get_default_log_filename(),
             const Severity log_serverity = Severity::DEBUG, const OutputMode log_output_mode = OutputMode::UBIQUITOUS) {
@@ -173,6 +146,33 @@ public:
       _log_file_stream.close();
     }
     _log_file_open = false;
+  }
+
+  void log(const std::string &log_string, Severity serverity) {
+    if (!_log_file_open && _log_output_mode >= OutputMode::FILE) {
+      std::cerr << "-------Log file not open---------";
+      return;
+    }
+
+    if (serverity < _log_severity) {
+      return;
+    }
+
+    std::string log = place_in_bracket(_timestamp_callback()) + " " + place_in_bracket(_thread_id_callback()) + " " +
+                      place_in_bracket(get_severity_string(serverity)) + " " + log_string;
+    std::lock_guard<std::mutex> lock(_logfile_mutex);
+    if (_log_output_mode > OutputMode::FILE) {
+      // flush the streem after each log;
+      _log_file_stream << log << std::endl;
+    }
+
+    if (_log_output_mode == OutputMode::CONSOLE || _log_output_mode == OutputMode::UBIQUITOUS) {
+      if (serverity == Severity::ERROR || serverity == Severity::WARNING) {
+        std::cerr << log << std::endl;
+      } else {
+        std::cout << log << std::endl;
+      }
+    }
   }
 
   template <typename T> void log(const T &value, Severity serverity) {
