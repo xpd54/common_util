@@ -28,8 +28,8 @@ public:
   };
 
   enum class OutputMode {
-    FILE,
     CONSOLE,
+    FILE,
     UBIQUITOUS,
   };
 
@@ -162,7 +162,7 @@ public:
     std::string log = place_in_bracket(_timestamp_callback()) + " " + place_in_bracket(_thread_id_callback()) + " " +
                       place_in_bracket(get_severity_string(serverity)) + " " + log_string;
     std::lock_guard<std::mutex> lock(_logfile_mutex);
-    if (_log_output_mode > OutputMode::FILE) {
+    if (_log_output_mode >= OutputMode::FILE) {
       // flush the streem after each log;
       _log_file_stream << log << std::endl;
     }
