@@ -149,7 +149,7 @@ public:
     _log_file_open = false;
   }
 
-  void log(const std::string &log_string, Severity serverity) {
+  void log(const std::string &log_string, Severity serverity = Logger::Severity::DEBUG) {
     if (!_log_file_open && _log_output_mode >= OutputMode::FILE) {
       std::cerr << "-------Log file not open---------";
       return;
