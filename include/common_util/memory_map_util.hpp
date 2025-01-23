@@ -38,8 +38,8 @@ public:
     file_begin = static_cast<T *>(_begin);
   }
 
-  const T *begin() { return file_begin; }
-  const T *end() { return file_begin + _size / sizeof(T); }
+  T *begin() { return file_begin; }
+  T *end() { return file_begin + _size / sizeof(T); }
   size_t size() { return _size / sizeof(T); }
   ~RMemoryMapped() {
     if (_begin) {
@@ -55,7 +55,7 @@ private:
   int file = -1;
   std::size_t _size;
   void *_begin;
-  const T *file_begin;
+  T *file_begin;
 };
 
 template <typename T> class WMemoryMapped final {
