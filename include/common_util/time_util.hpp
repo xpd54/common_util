@@ -1,4 +1,5 @@
 #pragma once
+#include "string_format_util.hpp"
 #include <_time.h>
 #include <ctime>
 #include <iomanip>
@@ -30,4 +31,11 @@ inline std::string formate_time_utc(const std::time_t &time, const std::string &
   std::tm *utc = std::gmtime(&time);
   stream << std::put_time(utc, format.c_str());
   return stream.str();
+}
+
+inline std::string duratino_to_string(const int64_t duration_sec) {
+  const int64_t hours = duration_sec / 3600;
+  const int64_t minutes = (duration_sec / 60) % 60;
+  const int64_t seconds = duration_sec % 60;
+  return common_util::string_format(hours, ':', minutes, ':', seconds);
 }
