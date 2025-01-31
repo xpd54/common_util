@@ -39,3 +39,10 @@ inline std::string duration_to_string(const int64_t duration_sec) {
   const int64_t seconds = duration_sec % 60;
   return common_util::string_format(hours, ':', minutes, ':', seconds);
 }
+
+inline std::time_t add_months(const std::time_t originalTime, int months) {
+  std::tm *tm = std::gmtime(&originalTime);
+  tm->tm_mon += months;
+  std::time_t new_time = std::mktime(tm);
+  return new_time;
+}
