@@ -40,8 +40,8 @@ inline std::string duration_to_string(const int64_t duration_sec) {
   return common_util::string_format(hours, ':', minutes, ':', seconds);
 }
 
-inline std::time_t add_months(const std::time_t originalTime, int months) {
-  std::tm *tm = std::gmtime(&originalTime);
+inline std::time_t add_months(const std::time_t original_time, int months) {
+  std::tm *tm = std::gmtime(&original_time);
   tm->tm_mon += months;
   std::time_t new_time = std::mktime(tm);
   return new_time;
