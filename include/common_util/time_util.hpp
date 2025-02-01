@@ -26,7 +26,7 @@ inline std::time_t convert_time_string(const std::string &timeString, const std:
 /*
 returns string formate from time_t
 */
-inline std::string formate_time_utc(const std::time_t &time, const std::string &format = "%Y-%m-%d") {
+inline std::string formate_time_utc(const std::time_t &time, const std::string &format = "%Y-%m-%d %H:%M:%S") {
   std::ostringstream stream;
   std::tm *utc = std::gmtime(&time);
   stream << std::put_time(utc, format.c_str());
