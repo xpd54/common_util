@@ -43,6 +43,6 @@ inline std::string duration_to_string(const int64_t duration_sec) {
 inline std::time_t add_months(const std::time_t original_time, int months) {
   std::tm *tm = std::gmtime(&original_time);
   tm->tm_mon += months;
-  std::time_t new_time = std::mktime(tm);
+  std::time_t new_time = timegm(tm);
   return new_time;
 }
