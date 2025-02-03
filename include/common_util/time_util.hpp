@@ -6,6 +6,8 @@
 #include <sstream>
 #include <string>
 
+namespace common_util {
+
 /*
 returns unix time. (considers input timeString as utc time)
 std::cout << std::ctime(&tm);
@@ -46,3 +48,5 @@ inline std::time_t add_months(const std::time_t original_time, int months) {
   std::time_t new_time = timegm(tm);
   return new_time;
 }
+
+} // namespace common_util
