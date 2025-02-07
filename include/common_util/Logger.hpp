@@ -37,38 +37,6 @@ public:
   using type_thread_id_callback = std::function<std::string(void)>;
 
 private:
-  Logger() {
-    set_timestamp_callback(Logger::get_timestamp);
-    set_thread_id_callback(Logger::get_this_thread_id);
-  }
-
-  // delete copy constructor and assignment
-  Logger(const Logger &) = delete;
-  Logger &operator=(const Logger &) = delete;
-
-public:
-  // will have singleton instance
-  static Logger &get_instance() {
-    static Logger self;
-    return self;
-  }
-
-  ~Logger() { close(); }
-
-  // do not use std::endl it flushes the whole buffer
-  static constexpr const char *endl = "\n";
-
-  inline void set_timestamp_callback(type_timestamp_callback callback) {
-    if (!_log_file_open && callback)
-      _timestamp_callback = callback;
-  }
-
-  inline void set_thread_id_callback(type_thread_id_callback callback) {
-    if (!_log_file_open && callback)
-      _thread_id_callback = callback;
-  }
-
-private:
   type_timestamp_callback _timestamp_callback;
   type_thread_id_callback _thread_id_callback;
 
@@ -127,7 +95,76 @@ private:
 
   std::string place_in_bracket(std::string value) { return "[" + value + "]"; }
 
+  void flush() {
+    if (!_log_file_open) {
+      return;
+    }
+
+    { // RAII scope for lock_guard
+      std::lock_guard<std::mutex> lock(_partial_log_mutext);
+      for (auto &pair_value : _partial_log_line_map) {
+        // log partial log and serverity (it's mapped and iterate over thread_id)
+        log(pair_value.second.rdbuf(), _partial_log_line_serverity_map[pair_value.first]);
+      }
+      _partial_log_line_map.clear();
+      _partial_log_line_serverity_map.clear();
+    }
+    _log_file_stream.flush();
+  }
+
+  template <typename T> void add_partial(const T &part_of_log) {
+    { // RAII scope for lock_guard
+      std::lock_guard lock(_partial_log_mutext);
+      auto &partial_stream = _partial_log_line_map[_thread_id_callback()];
+      partial_stream << part_of_log;
+    }
+  }
+
+  void flush_partial() {
+    const std::string thread_id = _thread_id_callback();
+    { // RAII scope for lock_guard
+      std::lock_guard lock(_partial_log_mutext);
+      log(_partial_log_line_map[thread_id].rdbuf(), _partial_log_line_serverity_map[thread_id]);
+
+      // remove partial log buffer
+      _partial_log_line_map.erase(thread_id);
+      _partial_log_line_serverity_map.erase(thread_id);
+    }
+  }
+
 public:
+  // will have singleton instance
+  // -----------Meyer’s Singleton----------
+  static Logger &get_instance() {
+    static Logger self;
+    return self;
+  }
+
+private:
+  Logger() {
+    set_timestamp_callback(Logger::get_timestamp);
+    set_thread_id_callback(Logger::get_this_thread_id);
+  }
+
+  // delete copy constructor and assignment
+  Logger(const Logger &) = delete;
+  Logger &operator=(const Logger &) = delete;
+  ~Logger() { close(); }
+  // -----------Meyer’s Singleton----------
+public:
+  static constexpr const char *endl = "\n";
+  inline void set_timestamp_callback(type_timestamp_callback callback) {
+    if (!_log_file_open && callback)
+      _timestamp_callback = callback;
+  }
+
+  inline void set_thread_id_callback(type_thread_id_callback callback) {
+    if (!_log_file_open && callback)
+      _thread_id_callback = callback;
+  }
+
+  // do not use std::endl it flushes the whole buffer
+
   void init(const std::string &log_file_name = Logger::get_default_log_filename(),
             const Severity log_serverity = Severity::DEBUG, const OutputMode log_output_mode = OutputMode::UBIQUITOUS) {
     if (_log_file_open)
@@ -188,66 +225,29 @@ public:
     log(string_stream.str(), serverity);
   }
 
-  void flush() {
-    if (!_log_file_open) {
-      return;
+  inline Logger &operator<<(const std::string &log_data) {
+    if (log_data == Logger::endl) {
+      this->flush_partial();
+    } else {
+      this->add_partial(log_data);
+      // if have new line flush it
+      auto pos = log_data.rfind("\n");
+      if (pos != std::string::npos && pos == log_data.size() - 1)
+        this->flush_partial();
     }
-
-    { // RAII scope for lock_guard
-      std::lock_guard<std::mutex> lock(_partial_log_mutext);
-      for (auto &pair_value : _partial_log_line_map) {
-        // log partial log and serverity (it's mapped and iterate over thread_id)
-        log(pair_value.second.rdbuf(), _partial_log_line_serverity_map[pair_value.first]);
-      }
-      _partial_log_line_map.clear();
-      _partial_log_line_serverity_map.clear();
-    }
-    _log_file_stream.flush();
+    return *this;
   }
 
-  template <typename T> void add_partial(const T &part_of_log) {
-    { // RAII scope for lock_guard
-      std::lock_guard lock(_partial_log_mutext);
-      auto &partial_stream = _partial_log_line_map[_thread_id_callback()];
-      partial_stream << part_of_log;
-    }
+  // Also take string litrals
+  inline Logger &operator<<(const char *log_data) {
+    *this << std::string(log_data);
+    return *this;
   }
 
-  void flush_partial() {
-    const std::string thread_id = _thread_id_callback();
-    { // RAII scope for lock_guard
-      std::lock_guard lock(_partial_log_mutext);
-      log(_partial_log_line_map[thread_id].rdbuf(), _partial_log_line_serverity_map[thread_id]);
-
-      // remove partial log buffer
-      _partial_log_line_map.erase(thread_id);
-      _partial_log_line_serverity_map.erase(thread_id);
-    }
+  template <class T> inline Logger &operator<<(const T &log_data) {
+    this->add_partial(log_data);
+    return *this;
   }
 };
-
-inline Logger &operator<<(Logger &output_stream, const std::string &log_data) {
-  if (log_data == Logger::endl) {
-    output_stream.flush_partial();
-  } else {
-    output_stream.add_partial(log_data);
-    // if have new line flush it
-    auto pos = log_data.rfind("\n");
-    if (pos != std::string::npos && pos == log_data.size() - 1)
-      output_stream.flush_partial();
-  }
-  return output_stream;
-}
-
-// Also take string litrals
-inline Logger &operator<<(Logger &output_stream, const char *log_data) {
-  output_stream << std::string(log_data);
-  return output_stream;
-}
-
-template <class T> inline Logger &operator<<(Logger &output_stream, const T &log_data) {
-  output_stream.add_partial(log_data);
-  return output_stream;
-}
 
 } // namespace common_util
