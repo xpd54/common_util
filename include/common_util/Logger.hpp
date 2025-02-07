@@ -248,6 +248,14 @@ public:
     this->add_partial(log_data);
     return *this;
   }
+
+  Logger &operator()(Severity log_severity) {
+    if (_partial_log_line_serverity_map[_thread_id_callback()] != log_severity)
+      flush();
+
+    _partial_log_line_serverity_map[_thread_id_callback()] = log_severity;
+    return get_instance();
+  }
 };
 
 } // namespace common_util
