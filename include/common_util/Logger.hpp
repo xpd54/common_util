@@ -47,7 +47,7 @@ private:
   std::unordered_map<std::string, std::stringstream> _partial_log_line_map;
 
   /*{thread_id: it's log severity}*/
-  std::unordered_map<std::string, Severity> _partial_log_line_serverity_map;
+  std::unordered_map<std::string, Severity> _partial_log_line_severity_map;
 
   std::string _log_filename;
   std::ofstream _log_file_stream;
@@ -103,11 +103,11 @@ private:
     { // RAII scope for lock_guard
       std::lock_guard<std::mutex> lock(_partial_log_mutext);
       for (auto &pair_value : _partial_log_line_map) {
-        // log partial log and serverity (it's mapped and iterate over thread_id)
-        log(pair_value.second.rdbuf(), _partial_log_line_serverity_map[pair_value.first]);
+        // log partial log and severity (it's mapped and iterate over thread_id)
+        log(pair_value.second.rdbuf(), _partial_log_line_severity_map[pair_value.first]);
       }
       _partial_log_line_map.clear();
-      _partial_log_line_serverity_map.clear();
+      _partial_log_line_severity_map.clear();
     }
     _log_file_stream.flush();
   }
@@ -124,11 +124,11 @@ private:
     const std::string thread_id = _thread_id_callback();
     { // RAII scope for lock_guard
       std::lock_guard lock(_partial_log_mutext);
-      log(_partial_log_line_map[thread_id].rdbuf(), _partial_log_line_serverity_map[thread_id]);
+      log(_partial_log_line_map[thread_id].rdbuf(), _partial_log_line_severity_map[thread_id]);
 
       // remove partial log buffer
       _partial_log_line_map.erase(thread_id);
-      _partial_log_line_serverity_map.erase(thread_id);
+      _partial_log_line_severity_map.erase(thread_id);
     }
   }
 
@@ -166,11 +166,11 @@ public:
   // do not use std::endl it flushes the whole buffer
 
   void init(const std::string &log_file_name = Logger::get_default_log_filename(),
-            const Severity log_serverity = Severity::DEBUG, const OutputMode log_output_mode = OutputMode::UBIQUITOUS) {
+            const Severity log_severity = Severity::DEBUG, const OutputMode log_output_mode = OutputMode::UBIQUITOUS) {
     if (_log_file_open)
       return;
     _log_filename = log_file_name;
-    _log_severity = log_serverity;
+    _log_severity = log_severity;
     _log_output_mode = log_output_mode;
   }
 
@@ -192,18 +192,18 @@ public:
     _log_file_open = false;
   }
 
-  void log(const std::string &log_string, Severity serverity = Logger::Severity::DEBUG) {
+  void log(const std::string &log_string, Severity severity) {
     if (!_log_file_open && _log_output_mode >= OutputMode::FILE) {
       std::cerr << "-------Log file not open---------";
       return;
     }
 
-    if (serverity < _log_severity) {
+    if (severity < _log_severity) {
       return;
     }
 
     std::string log = place_in_bracket(_timestamp_callback()) + " " + place_in_bracket(_thread_id_callback()) + " " +
-                      place_in_bracket(get_severity_string(serverity)) + " " + log_string;
+                      place_in_bracket(get_severity_string(severity)) + " " + log_string;
     std::lock_guard<std::mutex> lock(_logfile_mutex);
     if (_log_output_mode >= OutputMode::FILE) {
       // flush the streem after each log;
@@ -211,7 +211,7 @@ public:
     }
 
     if (_log_output_mode == OutputMode::CONSOLE || _log_output_mode == OutputMode::UBIQUITOUS) {
-      if (serverity == Severity::ERROR || serverity == Severity::WARNING) {
+      if (severity == Severity::ERROR || severity == Severity::WARNING) {
         std::cerr << log << std::endl;
       } else {
         std::cout << log << std::endl;
@@ -219,10 +219,10 @@ public:
     }
   }
 
-  template <typename T> void log(const T &value, Severity serverity) {
+  template <typename T> void log(const T &value, Severity severity) {
     std::ostringstream string_stream;
     string_stream << value;
-    log(string_stream.str(), serverity);
+    log(string_stream.str(), severity);
   }
 
   inline Logger &operator<<(const std::string &log_data) {
@@ -250,10 +250,10 @@ public:
   }
 
   Logger &operator()(Severity log_severity) {
-    if (_partial_log_line_serverity_map[_thread_id_callback()] != log_severity)
+    if (_partial_log_line_severity_map[_thread_id_callback()] != log_severity)
       flush();
 
-    _partial_log_line_serverity_map[_thread_id_callback()] = log_severity;
+    _partial_log_line_severity_map[_thread_id_callback()] = log_severity;
     return get_instance();
   }
 };
