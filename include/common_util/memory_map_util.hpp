@@ -37,7 +37,6 @@ public:
       throw std::system_error(errno, std::iostream_category(), "Can't map file");
     file_begin = static_cast<T *>(_begin);
   }
-
   T *begin() { return file_begin; }
   T *end() { return file_begin + _size / sizeof(T); }
   size_t size() { return _size / sizeof(T); }
@@ -49,6 +48,11 @@ public:
       close(file);
     }
   }
+  // delete copy assignment, move assignment, copy constructor, move constructor
+  RMemoryMapped(const RMemoryMapped &&) = delete;
+  RMemoryMapped &operator=(const RMemoryMapped &&) = delete;
+  RMemoryMapped(const RMemoryMapped &) = delete;
+  RMemoryMapped &operator=(const RMemoryMapped &) = delete;
 
 private:
   std::filesystem::path filePath;
@@ -95,6 +99,12 @@ public:
       close(file);
     }
   }
+
+  // delete copy assignment, move assignment, copy constructor, move constructor
+  WMemoryMapped(const WMemoryMapped &) = delete;
+  WMemoryMapped *operator=(const WMemoryMapped &) = delete;
+  WMemoryMapped(const WMemoryMapped &&) = delete;
+  WMemoryMapped &operator=(const WMemoryMapped &&) = delete;
 
 private:
   std::filesystem::path filePath;
