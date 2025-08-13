@@ -1,6 +1,5 @@
 #pragma once
 #include "string_format_util.hpp"
-#include <_time.h>
 #include <ctime>
 #include <iomanip>
 #include <sstream>

@@ -1,5 +1,4 @@
 #pragma once
-#include <_time.h>
 #include <algorithm>
 #include <cctype>
 #include <chrono>
@@ -88,8 +87,7 @@ private:
 
   static std::string get_default_log_filename() {
     std::string filename = Logger::get_timestamp();
-    std::replace_if(
-        filename.begin(), filename.end(), [](const char &c) { return std::isspace(c); }, '_');
+    std::replace_if(filename.begin(), filename.end(), [](const char &c) { return std::isspace(c); }, '_');
     return filename + ".log";
   }
 
